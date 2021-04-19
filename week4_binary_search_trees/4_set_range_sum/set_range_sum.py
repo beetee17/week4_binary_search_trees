@@ -218,26 +218,12 @@ def sum(fr, to):
 
   # split tree such that left subtree < fr, right subtree >= fr
   (left, middle) = split(root, fr)
-  update(middle)
-  if middle:
-    print('mid', middle.key, middle.sum)#, middle.right.key, middle.left)
-  else:
-    print('mid', middle)
-  if left:
-    print('left', left.key, left.sum)
-  else:
-    print('left', left)
+
+
   # split tree again, this time by the root of the right subtree from our first split
   # This splits such that left subtree >= fr and <= to, while the right subtree > to. The sum of the left subtree gives us our range sum
   (middle, right) = split(middle, to + 1)
-  if middle:
-    print('mid', middle.key, middle.sum,middle.right)
-  else:
-    print('mid', middle)
-  if right:
-    print('right', right.key, right.sum)
-  else:
-    print('right', right)
+
   # now merge the trees back. You have to respect the order, so first merge left and middle, then the result with right.
   res = 0 if not middle else middle.sum
   root = merge(merge(left, middle), right)
@@ -248,11 +234,11 @@ def sum(fr, to):
 
 MODULO = 1000000001
 
-n = int(f.readline())
+n = int(stdin.readline())
 last_sum_result = 0
 
 for i in range(n):
-  line = f.readline().split()
+  line = stdin.readline().split()
   
   if line[0] == '+':
     x = (int(line[1]) + last_sum_result) % MODULO
