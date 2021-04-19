@@ -114,6 +114,7 @@ def merge(left, right):
     right = right.left
   right = splay(right)
   right.left = left
+  left.parent = right
   update(right)
   return right
 
@@ -130,43 +131,220 @@ def insert(x):
     new_vertex = Vertex(x, x, None, None, None)  
   root = merge(merge(left, new_vertex), right)
   
-def erase(x): 
+def erase_1(x): 
   global root
-  # Implement erase yourself
-  pass
+  
+  # base case: there is only x in the BST
+  if root.key == x and not root.left and not root.right:
+    root = None
+    return root 
+
+  result = find(root, x)
+  found = result[0]
+  
+  # x is not in the tree
+  if not found:
+    return
+
+  # x is not in the tree
+  if found.key != x:
+    return
+  
+  # finds successor and splays to the top
+  result = find(root, x+1)
+  successor = result[0]
+  root = result[1]
+
+  # splays predecssor to the root, such that its right child is its successor
+  root = splay(found)
+  # print('successor',successor)
+
+  # promote successor to root
+  l = found.left 
+  r = found.right
+  # print('l', found.left)
+  # print('r', found.right)
+
+  if not successor:
+    # removing largest element -> does not have any right children
+    l.parent = None 
+    root = l
+    
+  else:
+    # there exists a larger element -> promote it (the right child)
+    r.left = l
+    root = r 
+    if r:
+      r.parent = None
+    if l:
+      l.parent = r
+    
+  return x
+
+def erase(x):
+  global root
+
+  # split the tree such that left subtree is < x, and right subtree is >= x
+  (left, middle) = split(root, x)
+
+  # make another split such that left subtree <= x, right subtree > x
+  (middle, right) = split(root, x+1)
+  
+  # merge the left subtree of first split with right subtree of second split
+  # this leaves out x if x was in the tree
+  # update the root of the new tree
+  root = merge(left, right)
+  
 
 def search(x): 
   global root
-  # Implement find yourself
   
+  # find(x) which also splays the node to the root
+  (result, root) = find(root, x)
+
+  # if x > all elements in the tree, find returns None
+  if not result:
+    return False
+
+  # found x
+  if result.key == x:
+    return True
+  
+  # if x is not in the tree and x is not the largest, find(x) returns its predecessor i.e next(x)
   return False
   
 def sum(fr, to): 
   global root
-  (left, middle) = split(root, fr)
-  (middle, right) = split(middle, to + 1)
-  ans = 0
-  # Complete the implementation of sum
 
-  return ans
+  # split tree such that left subtree < fr, right subtree >= fr
+  (left, middle) = split(root, fr)
+  update(middle)
+  if middle:
+    print('mid', middle.key, middle.sum)#, middle.right.key, middle.left)
+  else:
+    print('mid', middle)
+  if left:
+    print('left', left.key, left.sum)
+  else:
+    print('left', left)
+  # split tree again, this time by the root of the right subtree from our first split
+  # This splits such that left subtree >= fr and <= to, while the right subtree > to. The sum of the left subtree gives us our range sum
+  (middle, right) = split(middle, to + 1)
+  if middle:
+    print('mid', middle.key, middle.sum,middle.right)
+  else:
+    print('mid', middle)
+  if right:
+    print('right', right.key, right.sum)
+  else:
+    print('right', right)
+  # now merge the trees back. You have to respect the order, so first merge left and middle, then the result with right.
+  res = 0 if not middle else middle.sum
+  root = merge(merge(left, middle), right)
+  
+  return res
+
+
 
 MODULO = 1000000001
-n = int(stdin.readline())
+
+n = int(f.readline())
 last_sum_result = 0
+
 for i in range(n):
-  line = stdin.readline().split()
+  line = f.readline().split()
+  
   if line[0] == '+':
-    x = int(line[1])
-    insert((x + last_sum_result) % MODULO)
+    x = (int(line[1]) + last_sum_result) % MODULO
+    insert(x)
+    
+
   elif line[0] == '-':
-    x = int(line[1])
-    erase((x + last_sum_result) % MODULO)
+    x = (int(line[1]) + last_sum_result) % MODULO
+    erase(x)
+   
+
   elif line[0] == '?':
-    x = int(line[1])
-    print('Found' if search((x + last_sum_result) % MODULO) else 'Not found')
+    x = (int(line[1]) + last_sum_result) % MODULO
+    print('Found' if search(x) else 'Not found')
+
   elif line[0] == 's':
-    l = int(line[1])
-    r = int(line[2])
-    res = sum((l + last_sum_result) % MODULO, (r + last_sum_result) % MODULO)
-    print(res)
+    l = (int(line[1]) + last_sum_result) % MODULO
+    r = (int(line[2]) + last_sum_result) % MODULO
+    res = sum(l, r)
     last_sum_result = res % MODULO
+    print(res)
+  
+
+
+
+  
+
+# MODULO = 1000000001
+# fn = r'week4_binary_search_trees\4_set_range_sum\tests\36'
+# answer = fn + '.a'
+
+# wrong_ans = []
+# with open(fn, 'r') as f:
+#   with open(answer, 'r') as a:
+
+#     n = int(f.readline())
+#     last_sum_result = 0
+
+#     for i in range(n):
+#       line = f.readline().split()
+     
+#       if line[0] == '+':
+#         x = (int(line[1]) + last_sum_result) % MODULO
+#         insert(x)
+#         print('QUERY', i, line[0], x)
+
+#       elif line[0] == '-':
+#         x = (int(line[1]) + last_sum_result) % MODULO
+#         erase(x)
+#         print('QUERY', i, line[0], x)
+
+#       elif line[0] == '?':
+#         x = (int(line[1]) + last_sum_result) % MODULO
+#         res = 'Found' if search(x) else 'Not found'
+#         ans = a.readline().strip()
+    
+#         print('QUERY', i, line[0], x)
+#         print(ans)
+#         print(res, '\n')
+       
+#         if ans != str(res):
+#           print("INCORRECT")
+#           wrong_ans.append(i)
+#           break
+          
+
+#       elif line[0] == 's':
+#         l = (int(line[1]) + last_sum_result) % MODULO
+#         r = (int(line[2]) + last_sum_result) % MODULO
+#         res = sum(l, r)
+#         last_sum_result = res % MODULO
+      
+#         ans = a.readline().strip()
+      
+#         print('QUERY', i, line[0], l, r)
+#         print(ans)
+#         print(res, '\n')
+#         if ans != str(res):
+#           print("INCORRECT")
+#           wrong_ans.append(i)
+#           while True:
+            
+#             print(root.left)
+#             root = root.left
+#             if not root.left:
+#               break
+#           while True:
+#           break
+
+#       if root:
+#         print('\nroot:', root.key, '\n')
+#       else:
+#         print('\nempty tree\n')        
+# print(wrong_ans)   
+  
